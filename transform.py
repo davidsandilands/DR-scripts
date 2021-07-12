@@ -1,20 +1,21 @@
 import json
-# This defition allows us to traverse down the json groups finding all children
+# This defition allows us to traverse down the json groups finding all children of pe inf and to remove them
 def removesubgroups(data,id):
     groups = list(filter(lambda x:x ["parent"]==id,data))
     for group in groups:
         subid = group["id"]
+        print(subid)
         data = list(filter(lambda x:x ["id"]!=subid,data))
         data = removesubgroups(data,subid)
     return data
 
-# this is just returning one value
-def addsubgroups(dataDR,id,peinf):
+# This defintion allows us to traverse down the pe inf tree and find all groups
+def addsubgroups(data,id,peinf):
     groups = list(filter(lambda x:x ["parent"]==id,data))
     peinf = peinf + groups
     for group in groups:
         subid = group["id"]
-        peinf = addsubgroups(dataDR,subid,peinf)
+        peinf = addsubgroups(data,subid,peinf)
     return peinf
 
 # open the backup classifiction
@@ -24,26 +25,21 @@ with open('classification.json') as data_file:
 with open('classificationDR.json') as data_fileDR:
     data_DR = json.load(data_fileDR)
 
+# find the infrastructure group and its ID
 peinf = list(filter(lambda x:x ["name"]=="PE Infrastructure",data))
 id = peinf[0]["id"]
+# remove this group from the list and recursively remove all sub groups
+data = list(filter(lambda x:x ["id"]!=id,data))
 data = removesubgroups(data,id)
 
-peinf_DR = list(filter(lambda x:x ["name"]=="PE Infrastructure",data))
+# find the dr ingrastrucutre group and its ID
+peinf_DR = list(filter(lambda x:x ["name"]=="PE Infrastructure",data_DR))
 id_DR = peinf_DR[0]["id"]
-peinf_groups_DR = addsubgroups(data_DR,id_DR,peinf_DR)
-print(peinf_groups_DR)
-peinf_transformed_groups = data + peinf_groups_DR
-#print(peinf_transformed_groups)
+# Recursively go through inf groups to get the full tree
+peinf_DR = addsubgroups(data_DR,id_DR,peinf_DR)
 
-
-#list(map(lambda x:x if x["id_number"]=="cz1093" ,data)
-# remove our item from list
-#remove item from data
-#done
-# find pe inf id
-# remove pe inf
-# recurse down through children
-# for each find id, remove and recurse down
-# join this data with DR data
-#with open('transformclassification.json', 'w') as f:
-#    json.dump(data, f)
+# Add the contents of the backup classification without pe inf to the DR pe inf groups
+# and write to a file
+peinf_transformed_groups = data + peinf_DR
+with open('classification_transformed.json', 'x') as fp:
+    json.dump(peinf_transformed_groups, fp)
