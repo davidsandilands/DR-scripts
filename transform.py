@@ -4,7 +4,6 @@ def removesubgroups(data,id):
     groups = list(filter(lambda x:x ["parent"]==id,data))
     for group in groups:
         subid = group["id"]
-        print(subid)
         data = list(filter(lambda x:x ["id"]!=subid,data))
         data = removesubgroups(data,subid)
     return data
@@ -41,5 +40,5 @@ peinf_DR = addsubgroups(data_DR,id_DR,peinf_DR)
 # Add the contents of the backup classification without pe inf to the DR pe inf groups
 # and write to a file
 peinf_transformed_groups = data + peinf_DR
-with open('classification_transformed.json', 'x') as fp:
+with open('classification_transformed.json', 'w') as fp:
     json.dump(peinf_transformed_groups, fp)
